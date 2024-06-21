@@ -3,20 +3,23 @@ import { forwardRef, useCallback } from "react";
 import { useResizeObserver } from "./hooks";
 import { FabricProps } from "./types";
 
-export const Fabric = forwardRef<HTMLCanvasElement, FabricProps>(({ parentRef, onResize }, ref) => {
-  const setDimensions = useCallback(
-    (entries: ResizeObserverEntry[]) => {
-      if (entries.length === 1) {
-        onResize({
-          width: entries[0].contentRect.width,
-          height: entries[0].contentRect.height,
-        });
-      }
-    },
-    [onResize]
-  );
+export const Fabric = forwardRef<HTMLCanvasElement, FabricProps>(
+  ({ parentRef, onResize }, ref) => {
+    const setDimensions = useCallback(
+      ([entry]: ResizeObserverEntry[]) => {
+        if (entry) {
+          onResize({
+            width: entry.contentRect.width,
+            height: entry.contentRect.height,
+          });
+        }
+      },
+      [onResize]
+    );
 
-  useResizeObserver(parentRef, setDimensions);
+    console.log(parentRef.current);
+    useResizeObserver(parentRef, setDimensions);
 
-  return <canvas ref={ref} />;
-});
+    return <canvas ref={ref} />;
+  }
+);

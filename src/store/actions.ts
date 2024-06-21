@@ -53,11 +53,9 @@ export const clean = () => {
     if (fabric.isDrawingMode) {
       fabric.clear();
     } else {
-      const items = fabric.getActiveObjects();
-
-      for (const item of items) {
-        fabric.remove(item);
-      }
+      fabric.selection = false;
+      fabric.remove(...fabric.getActiveObjects());
+      fabric.selection = true;
     }
 
     return { fabric };

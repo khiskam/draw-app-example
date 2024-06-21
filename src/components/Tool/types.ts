@@ -1,3 +1,5 @@
+import React from "react";
+
 export type ToolProps = {
   active?: boolean;
   icon: JSX.Element;
@@ -5,4 +7,4 @@ export type ToolProps = {
   title: string;
   type?: "button" | "submit";
   onClick?: (e?: React.MouseEvent) => void;
-};
+} & React.PropsWithChildren;

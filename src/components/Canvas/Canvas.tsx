@@ -3,7 +3,7 @@ import { useRef } from "react";
 import PenIcon from "@/assets/pen.svg?react";
 import SelectIcon from "@/assets/selection.svg?react";
 import TrashIcon from "@/assets/trash.svg?react";
-import UploadIcon from "@/assets/upload.svg?react";
+
 import { BrushWidth } from "@/constants";
 import { Actions, useCanvas } from "@/store";
 import { BrushWidthSizes } from "@/types";
@@ -14,6 +14,7 @@ import { Tool } from "../Tool";
 import { Toolbar } from "../Toolbar";
 import styles from "./Canvas.module.scss";
 import { useInit } from "./hooks";
+import { DownloadTool } from "./DowloadTool";
 
 export const Canvas = () => {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -27,7 +28,11 @@ export const Canvas = () => {
 
   return (
     <div ref={wrapperRef} className={styles.container}>
-      <Fabric parentRef={wrapperRef} ref={canvasRef} onResize={Actions.setDimensions} />
+      <Fabric
+        parentRef={wrapperRef}
+        ref={canvasRef}
+        onResize={Actions.setDimensions}
+      />
 
       <Toolbar>
         <Tool icon={<TrashIcon />} onClick={Actions.clean} title={"Удалить"} />
@@ -61,12 +66,7 @@ export const Canvas = () => {
           active={checkBrushWidth(BrushWidth.Maximum)}
           title="Размер кисти 20"
         />
-        <Tool
-          icon={<UploadIcon />}
-          disabled={fabric.isEmpty()}
-          title={"Определить букву"}
-          type="submit"
-        />
+        <DownloadTool />
       </Toolbar>
     </div>
   );

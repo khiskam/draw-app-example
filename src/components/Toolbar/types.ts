@@ -1,5 +1,3 @@
-import { ToolProps } from "../Tool";
+import React from "react";
 
-export type ToolbarProps = {
-  children: React.ReactElement<ToolProps>[];
-};
+export type ToolbarProps = React.PropsWithChildren;
