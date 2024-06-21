@@ -1,8 +1,9 @@
-import { useCanvas } from "@/store";
 import { useLayoutEffect, useRef, useState } from "react";
-import { Tool } from "../Tool";
 
 import UploadIcon from "@/assets/upload.svg?react";
+import { useCanvas } from "@/store";
+
+import { Tool } from "../Tool";
 
 export const DownloadTool = () => {
   const { fabric } = useCanvas();

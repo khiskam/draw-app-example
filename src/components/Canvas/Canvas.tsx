@@ -3,7 +3,6 @@ import { useRef } from "react";
 import PenIcon from "@/assets/pen.svg?react";
 import SelectIcon from "@/assets/selection.svg?react";
 import TrashIcon from "@/assets/trash.svg?react";
-
 import { BrushWidth } from "@/constants";
 import { Actions, useCanvas } from "@/store";
 import { BrushWidthSizes } from "@/types";
@@ -13,8 +12,8 @@ import { Fabric } from "../Fabric";
 import { Tool } from "../Tool";
 import { Toolbar } from "../Toolbar";
 import styles from "./Canvas.module.scss";
-import { useInit } from "./hooks";
 import { DownloadTool } from "./DowloadTool";
+import { useInit } from "./hooks";
 
 export const Canvas = () => {
   const wrapperRef = useRef<HTMLDivElement>(null);
