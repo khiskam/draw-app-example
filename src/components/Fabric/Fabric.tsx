@@ -17,7 +17,6 @@ export const Fabric = forwardRef<HTMLCanvasElement, FabricProps>(
       [onResize]
     );
 
-    console.log(parentRef.current);
     useResizeObserver(parentRef, setDimensions);
 
     return <canvas ref={ref} />;

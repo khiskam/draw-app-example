@@ -5,7 +5,6 @@ export const useResizeObserver = <T extends HTMLElement>(
   callback: (entries: ResizeObserverEntry[]) => void
 ) => {
   useEffect(() => {
-    console.log("dep", dependency);
     const observer = new ResizeObserver(callback);
 
     if (dependency.current) {
