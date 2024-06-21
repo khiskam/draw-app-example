@@ -1,0 +1,20 @@
+.round {
+  background-color: $color-primary;
+
+  border-radius: $border-radius-round;
+
+  transition: $transition-duration;
+  aspect-ratio: 1;
+
+  &_min {
+    width: 8px;
+  }
+
+  &_medium {
+    width: 12px;
+  }
+
+  &_max {
+    width: 16px;
+  }
+}

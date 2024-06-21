@@ -1,0 +1,7 @@
+@mixin touch {
+  @media (hover: hover) {
+    &:hover {
+      @content;
+    }
+  }
+}

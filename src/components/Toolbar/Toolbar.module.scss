@@ -1,0 +1,35 @@
+@mixin effect {
+  background-color: $color-secondary;
+
+  & > svg path {
+    stroke: $color-blue;
+  }
+}
+
+.container {
+  position: fixed;
+  align-items: center;
+  display: flex;
+  height: 100%;
+  left: 0;
+  padding: $spacing-20;
+  top: 0;
+
+  pointer-events: none;
+}
+
+.toolbar {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: start;
+  max-height: 100%;
+  padding: $spacing-4;
+
+  background-color: $color-secondary-op-80;
+
+  text-orientation: upright;
+  writing-mode: vertical-lr;
+  border-radius: $border-radius-4;
+  pointer-events: auto;
+  gap: $spacing-4;
+}
