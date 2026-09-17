@@ -39,7 +39,7 @@ export const undo = <T>(state: HistoryState<T>): HistoryState<T> => {
 };
 
 export const redo = <T>(state: HistoryState<T>): HistoryState<T> => {
-  const next = state.future[0];
+  const next = state.future[state.future.length - 1];
 
   if (next === undefined) {
     return state;
@@ -48,6 +48,6 @@ export const redo = <T>(state: HistoryState<T>): HistoryState<T> => {
   return {
     past: [...state.past, state.present],
     present: next,
-    future: state.future.slice(1),
+    future: state.future.slice(0, -1),
   };
 };

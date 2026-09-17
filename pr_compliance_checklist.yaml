@@ -1,0 +1,42 @@
+pr_compliances:
+  - title: "Verification commands must pass"
+    compliance_label: true
+    objective: "Every pull request must leave the repository in a buildable and testable state."
+    success_criteria: "The pull request includes relevant tests and yarn test, yarn build, and yarn lint pass."
+    failure_criteria: "A relevant test is missing, or any required verification command fails."
+
+  - title: "Use APIs supported by the TypeScript target"
+    compliance_label: true
+    objective: "Keep application code compatible with the language and library target configured in tsconfig.app.json."
+    success_criteria: "New APIs are available in the configured ES2020 libraries, or the compiler target is intentionally updated with justification."
+    failure_criteria: "The change introduces a newer runtime API without updating configuration or providing a compatible alternative."
+
+  - title: "Keep Fabric and Zustand state synchronized"
+    compliance_label: true
+    objective: "Ensure the visible Fabric canvas and the Zustand history state always describe the same user-visible document."
+    success_criteria: "Canvas mutations update history exactly once, duplicate snapshots are ignored, and restore-generated events do not create new history entries."
+    failure_criteria: "Canvas and store can diverge, restore events are recorded as new edits, or one user action creates multiple history entries."
+
+  - title: "Serialize canvas restoration"
+    compliance_label: true
+    objective: "Prevent asynchronous Fabric snapshot restoration from racing and producing stale canvas state."
+    success_criteria: "Only one loadFromJSON operation runs at a time, and Undo/Redo actions are safely ignored or queued while restoration is active."
+    failure_criteria: "Multiple restorations can overlap, callbacks can finish out of order, or controls remain active during restoration."
+
+  - title: "Bound full-snapshot history"
+    compliance_label: true
+    objective: "Prevent long drawing sessions from retaining unbounded full-canvas JSON snapshots."
+    success_criteria: "History has an explicit maximum depth and evicts the oldest snapshots while preserving recent Undo/Redo behavior."
+    failure_criteria: "Every full snapshot is retained indefinitely or the history limit is missing and untested."
+
+  - title: "Test state transitions and edge cases"
+    compliance_label: true
+    objective: "Make changes to canvas history safe to evolve."
+    success_criteria: "Tests cover empty history, repeated Undo/Redo, branching after Undo, duplicate snapshots, restoration locking, and history eviction."
+    failure_criteria: "New history behavior is changed without focused tests for its state transitions and failure-prone edge cases."
+
+  - title: "Keep the repository clean"
+    compliance_label: true
+    objective: "Prevent generated artifacts, secrets, and debugging leftovers from entering the repository."
+    success_criteria: "The pull request contains only intentional source, test, configuration, and documentation changes."
+    failure_criteria: "The pull request adds dist/, build output, local environment files, credentials, or debug logging."
