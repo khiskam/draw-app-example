@@ -7,4 +7,5 @@ import { CanvasState } from "./types";
 export const useCanvas = create<CanvasState>(() => ({
   fabric: new fabric.Canvas(null),
   history: createHistory(""),
+  isRestoring: false,
 }));

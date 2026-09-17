@@ -4,13 +4,18 @@ import { BrushWidth, Colors } from "@/constants";
 import { BrushWidthSizes, Dimensions, Mode } from "@/types";
 
 import { createHistory, record, redo, undo } from "./history";
+import { createRestoreGuard } from "./restoration";
 import { useCanvas } from "./useCanvas";
 
-let isRestoring = false;
+const restoreGuard = createRestoreGuard();
+let suppressChanges = false;
 
 const getSnapshot = (canvas: fabric.Canvas) => JSON.stringify(canvas.toJSON());
 
 export const init = (canvas: HTMLCanvasElement) => {
+  restoreGuard.finish();
+  suppressChanges = false;
+
   useCanvas.setState(() => {
     const fabricCanvas = new fabric.Canvas(canvas);
     fabricCanvas.isDrawingMode = true;
@@ -24,12 +29,13 @@ export const init = (canvas: HTMLCanvasElement) => {
     return {
       fabric: fabricCanvas,
       history: createHistory(getSnapshot(fabricCanvas)),
+      isRestoring: false,
     };
   });
 };
 
 export const handleChange = () => {
-  if (isRestoring) {
+  if (suppressChanges || useCanvas.getState().isRestoring) {
     return;
   }
 
@@ -66,7 +72,7 @@ export const setDimensions = (dimensions: Dimensions) => {
 
 export const clean = () => {
   useCanvas.setState(({ fabric }) => {
-    isRestoring = true;
+    suppressChanges = true;
 
     if (fabric.isDrawingMode) {
       fabric.clear();
@@ -76,7 +82,7 @@ export const clean = () => {
       fabric.selection = true;
     }
 
-    isRestoring = false;
+    suppressChanges = false;
 
     return {
       fabric,
@@ -88,15 +94,25 @@ export const clean = () => {
 const applySnapshot = (snapshot: string) => {
   const { fabric } = useCanvas.getState();
 
-  isRestoring = true;
+  if (!restoreGuard.start()) {
+    return;
+  }
+
+  useCanvas.setState({ isRestoring: true });
   fabric.loadFromJSON(snapshot, () => {
     fabric.renderAll();
-    isRestoring = false;
+    restoreGuard.finish();
+    useCanvas.setState({ isRestoring: false });
   });
 };
 
 export const undoCanvas = () => {
-  const { history } = useCanvas.getState();
+  const { history, isRestoring } = useCanvas.getState();
+
+  if (isRestoring) {
+    return;
+  }
+
   const nextHistory = undo(history);
 
   if (nextHistory !== history) {
@@ -106,7 +122,12 @@ export const undoCanvas = () => {
 };
 
 export const redoCanvas = () => {
-  const { history } = useCanvas.getState();
+  const { history, isRestoring } = useCanvas.getState();
+
+  if (isRestoring) {
+    return;
+  }
+
   const nextHistory = redo(history);
 
   if (nextHistory !== history) {
@@ -116,9 +137,12 @@ export const redoCanvas = () => {
 };
 
 export const destroy = () => {
+  restoreGuard.finish();
+  suppressChanges = false;
+
   useCanvas.setState(({ fabric }) => {
     fabric.dispose();
 
-    return { fabric, history: createHistory("") };
+    return { fabric, history: createHistory(""), isRestoring: false };
   });
 };

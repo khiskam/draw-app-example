@@ -4,6 +4,8 @@ export type HistoryState<T> = {
   future: T[];
 };
 
+export const MAX_HISTORY_LENGTH = 50;
+
 export const createHistory = <T>(initial: T): HistoryState<T> => ({
   past: [],
   present: initial,
@@ -16,14 +18,14 @@ export const record = <T>(state: HistoryState<T>, snapshot: T) => {
   }
 
   return {
-    past: [...state.past, state.present],
+    past: [...state.past, state.present].slice(-MAX_HISTORY_LENGTH),
     present: snapshot,
     future: [],
   };
 };
 
 export const undo = <T>(state: HistoryState<T>): HistoryState<T> => {
-  const previous = state.past.at(-1);
+  const previous = state.past[state.past.length - 1];
 
   if (previous === undefined) {
     return state;

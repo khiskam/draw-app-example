@@ -20,7 +20,7 @@ import { useInit } from "./hooks";
 export const Canvas = () => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const { canvasRef } = useInit();
-  const { fabric, history } = useCanvas();
+  const { fabric, history, isRestoring } = useCanvas();
 
   const isDrawing = fabric.isDrawingMode;
 
@@ -30,6 +30,10 @@ export const Canvas = () => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "z") {
+        return;
+      }
+
+      if (useCanvas.getState().isRestoring) {
         return;
       }
 
@@ -56,13 +60,13 @@ export const Canvas = () => {
       <Toolbar>
         <Tool
           icon={<UndoIcon />}
-          disabled={history.past.length === 0}
+          disabled={isRestoring || history.past.length === 0}
           onClick={Actions.undoCanvas}
           title="Отменить (Ctrl/Cmd+Z)"
         />
         <Tool
           icon={<RedoIcon />}
-          disabled={history.future.length === 0}
+          disabled={isRestoring || history.future.length === 0}
           onClick={Actions.redoCanvas}
           title="Повторить (Ctrl/Cmd+Shift+Z)"
         />
