@@ -70,7 +70,12 @@ export const Canvas = () => {
           onClick={Actions.redoCanvas}
           title="Повторить (Ctrl/Cmd+Shift+Z)"
         />
-        <Tool icon={<TrashIcon />} onClick={Actions.clean} title={"Удалить"} />
+        <Tool
+          icon={<TrashIcon />}
+          disabled={isRestoring}
+          onClick={Actions.clean}
+          title={"Удалить"}
+        />
         <Tool
           icon={<SelectIcon />}
           onClick={() => Actions.setMode("selection")}

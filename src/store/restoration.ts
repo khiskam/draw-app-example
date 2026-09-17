@@ -1,17 +1,28 @@
 export const createRestoreGuard = () => {
-  let isActive = false;
+  let activeToken: number | null = null;
+  let nextToken = 0;
 
   return {
     start: () => {
-      if (isActive) {
+      if (activeToken !== null) {
+        return null;
+      }
+
+      nextToken += 1;
+      activeToken = nextToken;
+      return activeToken;
+    },
+    finish: (token: number | null) => {
+      if (token === null || activeToken !== token) {
         return false;
       }
 
-      isActive = true;
+      activeToken = null;
       return true;
     },
-    finish: () => {
-      isActive = false;
+    invalidate: () => {
+      activeToken = null;
+      nextToken += 1;
     },
   };
 };

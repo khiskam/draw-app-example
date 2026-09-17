@@ -13,7 +13,7 @@ let suppressChanges = false;
 const getSnapshot = (canvas: fabric.Canvas) => JSON.stringify(canvas.toJSON());
 
 export const init = (canvas: HTMLCanvasElement) => {
-  restoreGuard.finish();
+  restoreGuard.invalidate();
   suppressChanges = false;
 
   useCanvas.setState(() => {
@@ -71,6 +71,10 @@ export const setDimensions = (dimensions: Dimensions) => {
 };
 
 export const clean = () => {
+  if (useCanvas.getState().isRestoring) {
+    return;
+  }
+
   useCanvas.setState(({ fabric }) => {
     suppressChanges = true;
 
@@ -93,16 +97,20 @@ export const clean = () => {
 
 const applySnapshot = (snapshot: string) => {
   const { fabric } = useCanvas.getState();
+  const token = restoreGuard.start();
 
-  if (!restoreGuard.start()) {
+  if (token === null) {
     return;
   }
 
   useCanvas.setState({ isRestoring: true });
   fabric.loadFromJSON(snapshot, () => {
     fabric.renderAll();
-    restoreGuard.finish();
-    useCanvas.setState({ isRestoring: false });
+    const finished = restoreGuard.finish(token);
+
+    if (finished && useCanvas.getState().fabric === fabric) {
+      useCanvas.setState({ isRestoring: false });
+    }
   });
 };
 
@@ -137,7 +145,7 @@ export const redoCanvas = () => {
 };
 
 export const destroy = () => {
-  restoreGuard.finish();
+  restoreGuard.invalidate();
   suppressChanges = false;
 
   useCanvas.setState(({ fabric }) => {

@@ -23,6 +23,20 @@ describe("canvas history", () => {
     expect(redo(undone).present).toBe("two");
   });
 
+  it("redoes multiple undone snapshots in chronological order", () => {
+    const state = record(
+      record(record(createHistory("empty"), "one"), "two"),
+      "three",
+    );
+    const undone = undo(undo(undo(state)));
+
+    const firstRedo = redo(undone);
+    const secondRedo = redo(firstRedo);
+
+    expect(firstRedo.present).toBe("one");
+    expect(secondRedo.present).toBe("two");
+  });
+
   it("clears redo snapshots when a new change is recorded", () => {
     const state = undo(record(record(createHistory("empty"), "one"), "two"));
     const branched = record(state, "new branch");
