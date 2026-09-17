@@ -1,8 +1,10 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import PenIcon from "@/assets/pen.svg?react";
+import RedoIcon from "@/assets/redo.svg?react";
 import SelectIcon from "@/assets/selection.svg?react";
 import TrashIcon from "@/assets/trash.svg?react";
+import UndoIcon from "@/assets/undo.svg?react";
 import { BrushWidth } from "@/constants";
 import { Actions, useCanvas } from "@/store";
 import { BrushWidthSizes } from "@/types";
@@ -18,12 +20,30 @@ import { useInit } from "./hooks";
 export const Canvas = () => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const { canvasRef } = useInit();
-  const { fabric } = useCanvas();
+  const { fabric, history } = useCanvas();
 
   const isDrawing = fabric.isDrawingMode;
 
   const checkBrushWidth = (width: BrushWidthSizes) =>
     fabric.freeDrawingBrush.width === width && isDrawing;
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "z") {
+        return;
+      }
+
+      event.preventDefault();
+      if (event.shiftKey) {
+        Actions.redoCanvas();
+      } else {
+        Actions.undoCanvas();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   return (
     <div ref={wrapperRef} className={styles.container}>
@@ -34,6 +54,18 @@ export const Canvas = () => {
       />
 
       <Toolbar>
+        <Tool
+          icon={<UndoIcon />}
+          disabled={history.past.length === 0}
+          onClick={Actions.undoCanvas}
+          title="Отменить (Ctrl/Cmd+Z)"
+        />
+        <Tool
+          icon={<RedoIcon />}
+          disabled={history.future.length === 0}
+          onClick={Actions.redoCanvas}
+          title="Повторить (Ctrl/Cmd+Shift+Z)"
+        />
         <Tool icon={<TrashIcon />} onClick={Actions.clean} title={"Удалить"} />
         <Tool
           icon={<SelectIcon />}

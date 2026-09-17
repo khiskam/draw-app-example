@@ -3,7 +3,12 @@ import { fabric } from "fabric";
 import { BrushWidth, Colors } from "@/constants";
 import { BrushWidthSizes, Dimensions, Mode } from "@/types";
 
+import { createHistory, record, redo, undo } from "./history";
 import { useCanvas } from "./useCanvas";
+
+let isRestoring = false;
+
+const getSnapshot = (canvas: fabric.Canvas) => JSON.stringify(canvas.toJSON());
 
 export const init = (canvas: HTMLCanvasElement) => {
   useCanvas.setState(() => {
@@ -14,13 +19,24 @@ export const init = (canvas: HTMLCanvasElement) => {
 
     fabricCanvas.on("object:added", handleChange);
     fabricCanvas.on("object:removed", handleChange);
+    fabricCanvas.on("object:modified", handleChange);
 
-    return { fabric: fabricCanvas };
+    return {
+      fabric: fabricCanvas,
+      history: createHistory(getSnapshot(fabricCanvas)),
+    };
   });
 };
 
 export const handleChange = () => {
-  useCanvas.setState(({ fabric }) => ({ fabric }));
+  if (isRestoring) {
+    return;
+  }
+
+  useCanvas.setState(({ fabric, history }) => ({
+    fabric,
+    history: record(history, getSnapshot(fabric)),
+  }));
 };
 
 export const setBrushWidth = (width: BrushWidthSizes) => {
@@ -50,6 +66,8 @@ export const setDimensions = (dimensions: Dimensions) => {
 
 export const clean = () => {
   useCanvas.setState(({ fabric }) => {
+    isRestoring = true;
+
     if (fabric.isDrawingMode) {
       fabric.clear();
     } else {
@@ -58,14 +76,49 @@ export const clean = () => {
       fabric.selection = true;
     }
 
-    return { fabric };
+    isRestoring = false;
+
+    return {
+      fabric,
+      history: record(useCanvas.getState().history, getSnapshot(fabric)),
+    };
   });
+};
+
+const applySnapshot = (snapshot: string) => {
+  const { fabric } = useCanvas.getState();
+
+  isRestoring = true;
+  fabric.loadFromJSON(snapshot, () => {
+    fabric.renderAll();
+    isRestoring = false;
+  });
+};
+
+export const undoCanvas = () => {
+  const { history } = useCanvas.getState();
+  const nextHistory = undo(history);
+
+  if (nextHistory !== history) {
+    useCanvas.setState({ history: nextHistory });
+    applySnapshot(nextHistory.present);
+  }
+};
+
+export const redoCanvas = () => {
+  const { history } = useCanvas.getState();
+  const nextHistory = redo(history);
+
+  if (nextHistory !== history) {
+    useCanvas.setState({ history: nextHistory });
+    applySnapshot(nextHistory.present);
+  }
 };
 
 export const destroy = () => {
   useCanvas.setState(({ fabric }) => {
     fabric.dispose();
 
-    return { fabric };
+    return { fabric, history: createHistory("") };
   });
 };
