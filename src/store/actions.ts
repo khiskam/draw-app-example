@@ -3,9 +3,19 @@ import { fabric } from "fabric";
 import { BrushWidth, Colors } from "@/constants";
 import { BrushWidthSizes, Dimensions, Mode } from "@/types";
 
+import { createHistory, record, redo, undo } from "./history";
+import { createRestoreGuard } from "./restoration";
 import { useCanvas } from "./useCanvas";
 
+const restoreGuard = createRestoreGuard();
+let suppressChanges = false;
+
+const getSnapshot = (canvas: fabric.Canvas) => JSON.stringify(canvas.toJSON());
+
 export const init = (canvas: HTMLCanvasElement) => {
+  restoreGuard.invalidate();
+  suppressChanges = false;
+
   useCanvas.setState(() => {
     const fabricCanvas = new fabric.Canvas(canvas);
     fabricCanvas.isDrawingMode = true;
@@ -14,13 +24,25 @@ export const init = (canvas: HTMLCanvasElement) => {
 
     fabricCanvas.on("object:added", handleChange);
     fabricCanvas.on("object:removed", handleChange);
+    fabricCanvas.on("object:modified", handleChange);
 
-    return { fabric: fabricCanvas };
+    return {
+      fabric: fabricCanvas,
+      history: createHistory(getSnapshot(fabricCanvas)),
+      isRestoring: false,
+    };
   });
 };
 
 export const handleChange = () => {
-  useCanvas.setState(({ fabric }) => ({ fabric }));
+  if (suppressChanges || useCanvas.getState().isRestoring) {
+    return;
+  }
+
+  useCanvas.setState(({ fabric, history }) => ({
+    fabric,
+    history: record(history, getSnapshot(fabric)),
+  }));
 };
 
 export const setBrushWidth = (width: BrushWidthSizes) => {
@@ -49,7 +71,13 @@ export const setDimensions = (dimensions: Dimensions) => {
 };
 
 export const clean = () => {
+  if (useCanvas.getState().isRestoring) {
+    return;
+  }
+
   useCanvas.setState(({ fabric }) => {
+    suppressChanges = true;
+
     if (fabric.isDrawingMode) {
       fabric.clear();
     } else {
@@ -58,14 +86,71 @@ export const clean = () => {
       fabric.selection = true;
     }
 
-    return { fabric };
+    suppressChanges = false;
+
+    return {
+      fabric,
+      history: record(useCanvas.getState().history, getSnapshot(fabric)),
+    };
   });
 };
 
+const applySnapshot = (snapshot: string) => {
+  const { fabric } = useCanvas.getState();
+  const token = restoreGuard.start();
+
+  if (token === null) {
+    return;
+  }
+
+  useCanvas.setState({ isRestoring: true });
+  fabric.loadFromJSON(snapshot, () => {
+    fabric.renderAll();
+    const finished = restoreGuard.finish(token);
+
+    if (finished && useCanvas.getState().fabric === fabric) {
+      useCanvas.setState({ isRestoring: false });
+    }
+  });
+};
+
+export const undoCanvas = () => {
+  const { history, isRestoring } = useCanvas.getState();
+
+  if (isRestoring) {
+    return;
+  }
+
+  const nextHistory = undo(history);
+
+  if (nextHistory !== history) {
+    useCanvas.setState({ history: nextHistory });
+    applySnapshot(nextHistory.present);
+  }
+};
+
+export const redoCanvas = () => {
+  const { history, isRestoring } = useCanvas.getState();
+
+  if (isRestoring) {
+    return;
+  }
+
+  const nextHistory = redo(history);
+
+  if (nextHistory !== history) {
+    useCanvas.setState({ history: nextHistory });
+    applySnapshot(nextHistory.present);
+  }
+};
+
 export const destroy = () => {
+  restoreGuard.invalidate();
+  suppressChanges = false;
+
   useCanvas.setState(({ fabric }) => {
     fabric.dispose();
 
-    return { fabric };
+    return { fabric, history: createHistory(""), isRestoring: false };
   });
 };
