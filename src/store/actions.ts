@@ -95,6 +95,26 @@ export const clean = () => {
   });
 };
 
+export const deleteSelectedObjects = () => {
+  if (useCanvas.getState().isRestoring) {
+    return;
+  }
+
+  useCanvas.setState(({ fabric, history }) => {
+    const selectedObjects = fabric.getActiveObjects();
+    if (selectedObjects.length === 0) {
+      return { fabric };
+    }
+
+    suppressChanges = true;
+    fabric.remove(...selectedObjects);
+    fabric.discardActiveObject();
+    suppressChanges = false;
+
+    return { fabric, history: record(history, getSnapshot(fabric)) };
+  });
+};
+
 const applySnapshot = (snapshot: string) => {
   const { fabric } = useCanvas.getState();
   const token = restoreGuard.start();

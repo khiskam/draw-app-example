@@ -29,6 +29,24 @@ export const Canvas = () => {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target;
+      const isEditingText =
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA");
+
+      if (
+        !isEditingText &&
+        (event.key === "Delete" || event.key === "Backspace") &&
+        !useCanvas.getState().isRestoring &&
+        useCanvas.getState().fabric.getActiveObjects().length > 0
+      ) {
+        event.preventDefault();
+        Actions.deleteSelectedObjects();
+        return;
+      }
+
       if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "z") {
         return;
       }
