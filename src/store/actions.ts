@@ -100,7 +100,7 @@ export const deleteSelectedObjects = () => {
     return;
   }
 
-  useCanvas.setState(({ fabric }) => {
+  useCanvas.setState(({ fabric, history }) => {
     const selectedObjects = fabric.getActiveObjects();
     if (selectedObjects.length === 0) {
       return { fabric };
@@ -111,7 +111,7 @@ export const deleteSelectedObjects = () => {
     fabric.discardActiveObject();
     suppressChanges = false;
 
-    return { fabric };
+    return { fabric, history: record(history, getSnapshot(fabric)) };
   });
 };
 
